@@ -1,0 +1,115 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&family=Tajawal:wght@400;500;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 210 40% 98%;
+  --foreground: 222 47% 11%;
+  --card: 0 0% 100%;
+  --card-foreground: 222 47% 11%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222 47% 11%;
+  --primary: 160 84% 16%; /* deep emerald */
+  --primary-foreground: 0 0% 100%;
+  --secondary: 210 40% 96%;
+  --secondary-foreground: 222 47% 11%;
+  --muted: 210 40% 96%;
+  --muted-foreground: 215 16% 47%;
+  --accent: 43 60% 52%; /* gold */
+  --accent-foreground: 222 47% 11%;
+  --destructive: 0 72% 51%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 214 32% 91%;
+  --input: 214 32% 91%;
+  --ring: 160 84% 16%;
+  --radius: 0.75rem;
+
+  --chart-1: 160 84% 24%;
+  --chart-2: 43 70% 50%;
+  --chart-3: 199 89% 38%;
+  --chart-4: 280 50% 50%;
+  --chart-5: 0 70% 55%;
+
+  --font-en-head: 'Outfit', 'IBM Plex Sans', system-ui, sans-serif;
+  --font-en-body: 'IBM Plex Sans', system-ui, sans-serif;
+  --font-ar-head: 'Tajawal', 'IBM Plex Sans Arabic', system-ui, sans-serif;
+  --font-ar-body: 'IBM Plex Sans Arabic', 'Tajawal', system-ui, sans-serif;
+}
+
+.dark {
+  --background: 222 47% 6%;
+  --foreground: 210 40% 98%;
+  --card: 222 47% 9%;
+  --card-foreground: 210 40% 98%;
+  --popover: 222 47% 9%;
+  --popover-foreground: 210 40% 98%;
+  --primary: 160 70% 45%;
+  --primary-foreground: 222 47% 6%;
+  --secondary: 217 32% 14%;
+  --secondary-foreground: 210 40% 98%;
+  --muted: 217 32% 14%;
+  --muted-foreground: 215 16% 65%;
+  --accent: 43 80% 60%;
+  --accent-foreground: 222 47% 6%;
+  --destructive: 0 62% 50%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 217 32% 18%;
+  --input: 217 32% 18%;
+  --ring: 160 70% 45%;
+}
+
+html[dir='ltr'] body { font-family: var(--font-en-body); }
+html[dir='rtl'] body { font-family: var(--font-ar-body); }
+html[dir='ltr'] .font-display { font-family: var(--font-en-head); }
+html[dir='rtl'] .font-display { font-family: var(--font-ar-head); }
+
+@layer base {
+  * { @apply border-border; }
+  body {
+    @apply bg-background text-foreground antialiased;
+    background-image:
+      radial-gradient(circle at 0% 0%, hsl(var(--primary) / 0.05), transparent 40%),
+      radial-gradient(circle at 100% 100%, hsl(var(--accent) / 0.06), transparent 40%);
+  }
+  ::selection { background: hsl(var(--accent) / 0.35); color: hsl(var(--foreground)); }
+}
+
+@layer components {
+  .glass {
+    background: hsl(var(--card) / 0.7);
+    backdrop-filter: blur(16px) saturate(160%);
+    -webkit-backdrop-filter: blur(16px) saturate(160%);
+    border: 1px solid hsl(var(--border));
+  }
+  .ring-emerald {
+    box-shadow: 0 0 0 1px hsl(var(--primary) / 0.18), 0 1px 0 hsl(var(--background));
+  }
+  .grid-pattern {
+    background-image:
+      linear-gradient(hsl(var(--border) / 0.5) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(var(--border) / 0.5) 1px, transparent 1px);
+    background-size: 36px 36px;
+  }
+  .text-accent-gold { color: hsl(var(--accent)); }
+  .border-accent-gold { border-color: hsl(var(--accent)); }
+  .bg-accent-gold { background-color: hsl(var(--accent)); }
+}
+
+/* Hide scrollbar for clean look but keep functionality */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Subtle pulse for live badge */
+@keyframes live-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+.animate-live { animation: live-pulse 1.4s ease-in-out infinite; }
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-up { animation: fade-up 0.45s ease-out both; }

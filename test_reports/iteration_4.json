@@ -1,0 +1,40 @@
+{
+  "summary": "Frontend E2E test of enhanced iLogic purple branding + new background-style + brand-symbol watermark feature. ALL feature requirements verified PASS. Login page renders purple identity with large symbol watermark + iLogic logo. After admin login, --primary CSS var = '261 73% 23%' (= #2E1065 purple), active sidebar item bg = rgb(46,16,101) (purple, NOT emerald). /admin/branding shows new Brand symbol field (branding-symbol-upload + branding-symbol-url), Page background section with 4 style buttons (branding-bg-pattern/gradient/solid/image), all testids present. Selecting 'image' reveals branding-bgimage-upload conditional field; switching away hides it. Save persists; on /dashboard the data-testid='app-background' decorative layer is rendered. With gradient style: 0 img watermarks (just radial gradients). After reset->pattern (default): 2 img watermarks visible (subtle, opacity ~6-9%). Reset restores defaults (purple primary + pattern style + title 'iLogic World Cup Predictor'). Regression: /admin, /admin/users, /admin/tournament, /admin/predictions, /dashboard, /matches all load without DOM errors and app-background present on all.",
+  "backend_issues": { "critical": [], "minor": [] },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Layout.jsx AppBackground: 'gradient' and 'pattern' share the same radial-gradient block; the only visual difference is the two <img> watermarks for pattern. For 'solid' style, AppBackground renders an empty div - background relies solely on body bg color from CSS vars; consider rendering a single solid color overlay for explicitness so the in-app page background follows branding.colors.background even when CSS var injection has not yet propagated.",
+    "Layout.jsx AppBackground default style fallback is 'gradient' (line 116) but DEFAULTS in Branding.jsx and seed.py are 'pattern'. If branding fetch fails, users will see gradient instead of the intended branded pattern - consider aligning default to 'pattern'.",
+    "Branding.jsx reset() flow: still shows toast 'saved' (silent=true suppresses inner toast - good) followed by 'resetDone' - acceptable single toast now, but reset() also sets local state synchronously before awaiting save; if save fails the UI lies (shows DEFAULTS while server still has old values). Wrap reset in try/catch and revert on failure.",
+    "Layout.jsx symbol watermark images do not have loading='lazy' and use opacity ~0.06; on slow networks the large PNG (the iLogic 'ايقونه' file) blocks first paint slightly - add loading='lazy' or use a smaller webp.",
+    "Branding.jsx BG_STYLES array - no i18n fallback if t('admin.branding.bg_solid') key missing in locale file; verify all four bg_pattern/bg_gradient/bg_solid/bg_image translation keys exist in both en and ar."
+  ],
+  "updated_files": [],
+  "success_rate": { "backend": "n/a (skipped per request)", "frontend": "100%" },
+  "test_credentials": "admin@company.com / Admin@12345 (single successful login)",
+  "seed_data_creation": "None. Final reset clicked - app left on iLogic purple v2 defaults (background_style='pattern', primary=#2E1065).",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Branding v2 (purple + symbol watermark + background style selector) fully verified. New data-testids confirmed: app-background (Layout decorative layer), branding-symbol-upload/url, branding-bg-pattern/gradient/solid/image, branding-bgimage-upload (conditional). Login form uses login-email-input / login-password-input (NOT login-email). 5-attempt brute-force throttle keyed on X-Forwarded-For:email - keep login attempts <=2 per test run. App-background renders in BOTH employee (/dashboard) and admin (/admin/*) layouts. Pattern mode renders 2 <img> watermark elements inside app-background; gradient renders 0 imgs (only radial-gradient styles); image mode renders 1 cover img; solid renders an empty div (relies on body bg).",
+  "test_coverage_executed": [
+    "Login page: login-hero-logo visible, purple gradient overlay, large symbol watermark visible, brand name 'iLogic World Cup Predictor' rendered, title correct",
+    "Admin login -> /admin (purple active nav bg rgb(46,16,101))",
+    "--primary CSS var resolves to HSL of #2E1065",
+    "app-background present on /admin and /dashboard",
+    "/admin/branding loads with admin-branding container",
+    "branding-symbol-upload, branding-symbol-url present",
+    "All 4 bg style buttons present (pattern/gradient/solid/image)",
+    "Clicking branding-bg-image reveals branding-bgimage-upload",
+    "Clicking branding-bg-solid hides branding-bgimage-upload",
+    "Save with gradient -> /dashboard app-background contains 0 imgs",
+    "Reset -> app-background contains 2 imgs (pattern watermark), --primary still purple",
+    "Pattern bg button shows bg-primary class (active state) after reset",
+    "Regression: /admin, /admin/users, /admin/tournament, /admin/predictions, /dashboard, /matches load with no .error/[class*=error] elements"
+  ]
+}

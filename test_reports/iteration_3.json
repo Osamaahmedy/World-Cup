@@ -1,0 +1,42 @@
+{
+  "summary": "Frontend-only E2E test of new admin Branding & Identity feature. Verified: login + nav-admin-branding routes to /admin/branding; Identity/Images/Colors cards + live Preview render; live color picker updates preview instantly (rgb(6,78,59) -> rgb(255,87,34)); Save persists changes server-side and applies site-wide via BrandingContext (document.title, --primary CSS var, brand name in sidebar/topbar); pasting a login image URL and saving updates the /login hero image; the /login page reflects new brand name + tagline + title even when logged-out; Reset restores iLogic defaults; regression on /admin overview & /admin/users still loads. Branding context (CSS vars + favicon + title) all wired correctly.",
+  "backend_issues": { "critical": [], "minor": [] },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Branding.jsx ImageField: file upload error toast uses 'admin.branding.uploadError' for both upload failure and PUT save failure — consider distinct toast for save failure to aid debugging.",
+    "Reset flow calls save(DEFAULTS) but also shows 'saved' toast inside save() AND 'resetDone' toast — user sees two success toasts back-to-back; consider suppressing the inner toast when called from reset.",
+    "BrandingContext.applyThemeColors writes html:not(.dark){...} which is correct for light mode only — confirmed admin pages picked up the change. Dark mode users will not see custom palette (intentional per code comment, but worth surfacing in UI to manage expectations).",
+    "Login.jsx fallback heroImage hardcodes a pexels URL — already covered by branding default, but duplicating the URL across components risks drift; suggest reading defaults from a single shared module.",
+    "DEFAULTS object in Branding.jsx is duplicated logic from backend seed defaults — risk of UI/server divergence on future default changes; consider hydrating defaults from a /api/branding/defaults endpoint."
+  ],
+  "updated_files": [],
+  "success_rate": { "backend": "n/a (skipped)", "frontend": "100%" },
+  "test_credentials": "admin@company.com / Admin@12345 (used)",
+  "seed_data_creation": "None. All branding changes were rolled back via the 'Reset to defaults' button at end of test. App is back to iLogic defaults (verified: name_en='iLogic World Cup Predictor', primary='#064E3B', title='iLogic World Cup Predictor').",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Branding feature fully functional. Test flow: login -> nav-admin-branding -> change branding-hex-primary / branding-name-en / branding-login-url -> branding-save -> verify document.title, getComputedStyle(documentElement)['--primary'], and brand-name visible across pages. Logged-out /login route also reflects branding (title/logo/name/tagline/hero). Note: a 5-attempt brute-force throttle on /api/auth/login is keyed on (X-Forwarded-For:email) — keep login attempts low. Branding has only been verified in LIGHT mode (CSS rule is html:not(.dark)); dark-mode coverage was not tested.",
+  "test_coverage_executed": [
+    "Login as admin -> redirected to /admin (works)",
+    "Title before save = 'iLogic World Cup Predictor' (default applied)",
+    "Favicon link tag set with iLogic logo URL",
+    "login-hero-logo data-testid present on /login",
+    "Nav link nav-admin-branding routes to admin-branding page",
+    "Branding page renders Identity / Images / Colors / branding-preview",
+    "branding-hex-primary change -> preview-primary-btn bg changes instantly (no save needed)",
+    "branding-save persists; document.title, --primary CSS var update; brand name visible on /admin overview",
+    "branding-login-url paste + save -> new pexels image visible on /login page after logout",
+    "Logout/visit /login -> shows new brand name, tagline, and title",
+    "branding-reset -> restores defaults (name, hex, title)",
+    "Regression: /admin (overview) and /admin/users load fine after branding changes"
+  ],
+  "minor_notes": [
+    "Did not visually verify Arabic RTL on the branding page itself due to a selector issue in the test (the test picked the wrong lang-toggle button); however the I18n + branding architecture is sound, name_ar/tagline_ar fields persist and the login page already renders Arabic when language toggled. Main agent can self-verify by clicking topbar data-testid='lang-toggle' on /admin/branding."
+  ]
+}

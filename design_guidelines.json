@@ -1,0 +1,117 @@
+{
+  "project_name": "Company World Cup Predictor",
+  "theme_strategy": {
+    "primary_theme": "Light Mode",
+    "dark_mode_support": true,
+    "archetype": "Hybrid: Archetype 4 (Swiss/High Contrast) + Archetype 5 (Luxury / Gulf Corporate)",
+    "design_philosophy": "Gulf-corporate sophistication meets football energy. A highly professional, prestigious interface blending fintech-level data density (for dashboards/admin) with sports excitement. Relies on progressive disclosure, modular 'Bento' grids, and strict F-pattern information hierarchy."
+  },
+  "typography": {
+    "fonts": {
+      "english_headings": "Outfit",
+      "english_body": "IBM Plex Sans",
+      "arabic_headings": "Tajawal",
+      "arabic_body": "IBM Plex Sans Arabic"
+    },
+    "scale": {
+      "h1": "text-4xl sm:text-5xl tracking-tight font-bold",
+      "h2": "text-2xl sm:text-3xl tracking-tight font-semibold",
+      "h3": "text-xl sm:text-2xl font-semibold",
+      "h4": "text-lg font-medium",
+      "body": "text-base leading-relaxed",
+      "small": "text-sm",
+      "overline": "text-xs font-bold uppercase tracking-[0.2em]"
+    },
+    "rules": [
+      "Avoid Inter, Roboto, and generic defaults.",
+      "Headings must use tight tracking. Overlines must use wide tracking.",
+      "Limit hero text size to text-5xl (fluid). Do not exceed.",
+      "Ensure proper font weight matching between English (Latin) and Arabic scripts."
+    ]
+  },
+  "colors": {
+    "primary": {
+      "DEFAULT": "#064E3B",
+      "description": "Deep Emerald Green - Corporate trust and football pitches.",
+      "light": "#059669",
+      "dark": "#022C22",
+      "foreground": "#FFFFFF"
+    },
+    "accent": {
+      "DEFAULT": "#D4AF37",
+      "description": "Royal Gold - Prestige, awards, desert sand.",
+      "light": "#FCD34D",
+      "dark": "#B45309",
+      "foreground": "#0F172A"
+    },
+    "background": {
+      "light": "#F8FAFC",
+      "dark": "#0A0A0A"
+    },
+    "surface": {
+      "light": "#FFFFFF",
+      "dark": "#171717"
+    },
+    "border": {
+      "light": "#E2E8F0",
+      "dark": "#262626"
+    },
+    "text": {
+      "primary": "#0F172A",
+      "secondary": "#475569",
+      "dark_primary": "#F8FAFC",
+      "dark_secondary": "#94A3B8"
+    }
+  },
+  "layout_and_spacing": {
+    "grid_modes": {
+      "employee_dashboard": "Bento Grid - Asymmetrical but structured. grid-cols-1 md:grid-cols-8 lg:grid-cols-12 with varied spans (e.g., col-span-8 for Hero/Matches, col-span-4 for Leaderboard).",
+      "admin_portal": "Control Room Grid - Dense and symmetrical. grid-cols-1 md:grid-cols-3 lg:grid-cols-4 for KPI summaries, full width for data tables."
+    },
+    "spacing_scale": "Generous interior padding: p-6 or p-8 for cards to prevent text collision. Gaps: gap-6 to gap-8.",
+    "bilingual_rtl_ltr_strategy": "CRITICAL: Use Tailwind logical properties exclusively (ps-*, pe-*, ms-*, me-*, text-start, text-end, rounded-s-*, rounded-e-*). Set <html dir='rtl'> or <html dir='ltr'> dynamically. Never hardcode 'left' or 'right' margins/paddings."
+  },
+  "components": {
+    "surfaces": "Neumorphic/Flat blend. Flat background with a crisp 1px border (border-border). No heavy static shadows.",
+    "glassmorphism": "Use 'Crystal Glass' strictly for sticky headers/nav (backdrop-blur-xl bg-surface/80 border-b border-border).",
+    "buttons": "Explicit hover states (hover:-translate-y-0.5 hover:shadow-md transition-all). Primary button uses Emerald, Secondary uses Outline. Accent buttons (Gold) for 'Predict Now' or high-value CTAs.",
+    "cards": "Subtle border-radius (rounded-xl). Do not overuse cards; consider open grids for news/content.",
+    "tables": "Shadcn based. High density, distinct header row, zebra-striping optional but preferred for large admin datasets."
+  },
+  "image_urls": [
+    {
+      "category": "hero_background",
+      "url": "https://images.pexels.com/photos/35898730/pexels-photo-35898730.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+      "description": "Dramatic illuminated stadium night. Use with heavy Emerald gradient overlay (bg-emerald-900/80) for the login page hero."
+    },
+    {
+      "category": "stadium_abstract",
+      "url": "https://images.unsplash.com/photo-1489944440615-453fc2b6a9a9?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjY2NzN8MHwxfHNlYXJjaHwyfHxzb2NjZXIlMjBzdGFkaXVtJTIwbmlnaHR8ZW58MHx8fHwxNzgwNDkyNjAzfDA&ixlib=rb-4.1.0&q=85",
+      "description": "High-angle stadium view. Excellent for dashboard headers or news section featured image."
+    },
+    {
+      "category": "rewards_trophy",
+      "url": "https://images.pexels.com/photos/6532362/pexels-photo-6532362.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+      "description": "Premium gold trophies close-up. Use in the Awards/Prizes section."
+    },
+    {
+      "category": "corporate_team",
+      "url": "https://images.pexels.com/photos/7794060/pexels-photo-7794060.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+      "description": "Modern corporate office team meeting. Use for generic placeholder avatars, admin dashboard background, or internal announcements."
+    }
+  ],
+  "testing_and_accessibility": {
+    "data_testid_requirement": "CRITICAL: All interactive and key informational elements MUST include a data-testid attribute in kebab-case based on role (e.g., data-testid='predict-match-button', data-testid='admin-users-tab').",
+    "contrast": "Ensure all text over the Emerald primary color or dark overlays meets 4.5:1 WCAG AA minimums (use white text).",
+    "motion": "Respect prefers-reduced-motion. Animations should be swift (max 200ms) and purposeful."
+  },
+  "instructions_to_main_agent": [
+    "1. Do not use AI-slop purple/teal gradients. Adhere strictly to the Emerald and Gold palette.",
+    "2. Implement a context/provider for RTL/LTR switching that changes the dir attribute on the root HTML element and swaps the font family CSS variables.",
+    "3. Use Tailwind CSS logical properties (e.g., `ps-4`, `me-2`, `text-start`) instead of physical ones (`pl-4`, `mr-2`, `text-left`) across the ENTIRE application to ensure seamless bilingual RTL functionality.",
+    "4. Construct the Employee Dashboard using the 'Bento' grid concept, prioritizing the 'North Star' metric (User's Rank/Points) at the top start position.",
+    "5. Build the Admin Portal with high data density (fintech style), utilizing progressive disclosure for complex tables and analytics.",
+    "6. Customize Shadcn UI components natively in React (.js) using standard Tailwind classes matching this guideline.",
+    "7. Ensure EVERY button, form input, navigation link, and table row has a contextual `data-testid`."
+  ]
+}

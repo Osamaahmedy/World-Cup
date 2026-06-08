@@ -1,0 +1,31 @@
+{
+  "summary": "Frontend E2E verification of new Employee-ID auth + 3-tier RBAC (super_admin/admin/employee) for World Cup Predictor. ALL feature requirements PASS. Login uses Employee ID (no email anywhere). Super Admin (1000/Admin@12345) and Admin (1001/Admin@12345) both land on /admin. Employee 1003/123456 lands on /dashboard without forced change. After resetting 1002 from the admin Users page (KeyRound reset button), 1002/123456 is redirected to /change-password where weak passwords are rejected (stays on page) and a strong password (Test@1234Abc) is accepted -> /dashboard. RBAC verified: Super Admin sees Branding sidebar item and can open /admin/branding; Regular Admin does NOT see Branding nav and direct navigation to /admin/branding redirects to /admin. Admin Users page header columns are: NAME | EMPLOYEE ID | DEPARTMENT | ROLE | ACTIVE | ACTIONS (no email column). Role dropdown shows super_admin option only for super_admin (regular admin sees only employee|admin). Per-row reset-password (KeyRound) buttons present (15 rows). Profile page displays 'Employee ID: 1003' (not email) for 1003. Bilingual toggle flips document dir attribute ltr<->rtl and lang en<->ar on login page. Unauthenticated /dashboard redirects to /login. Logout via user-menu-trigger -> menu-logout clears wcp_token and returns user to /login.",
+  "backend_issues": { "critical": [], "minor": [] },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Admin User dialog (Add user)", "issues": ["Radix DialogContent missing aria-describedby - accessibility console warning 'Missing Description or aria-describedby={undefined} for DialogContent'. Add a DialogDescription or aria-describedby for screen-reader users."]}
+    ]
+  },
+  "test_report_links": ["/app/backend/tests/test_backend.py (existing, not re-run this iteration)"],
+  "action_items": [
+    "(Low priority) Add DialogDescription / aria-describedby to user-dialog (Users.jsx) to satisfy Radix a11y warning.",
+    "(Low priority) Login.jsx renders two elements with data-testid='lang-toggle-login' (mobile lg:hidden + desktop hidden lg:flex). Only one is visible at any breakpoint but duplicate testids can cause strict-mode selector failures in tests. Consider giving them different testids like 'lang-toggle-login-mobile' / 'lang-toggle-login-desktop'."
+  ],
+  "critical_code_review_comments": [
+    "ChangePassword.jsx submit() catches errors and shows err.response.data.detail in toast - but FastAPI 422 validation errors return detail as an array of objects, which will render as '[object Object]'. Coerce to string or only show when typeof detail === 'string'.",
+    "Login.jsx employeeId is trimmed only on submit; consider trimming in onChange to avoid silent leading/trailing-space mismatches when admins paste IDs from spreadsheets.",
+    "Users.jsx role <Select> filters super_admin option client-side only; the backend must independently reject role=super_admin for non-super admins (verified passing per agent-to-agent note that 53/53 backend tests pass, including RBAC).",
+    "Layout.jsx admin link filter `l.to !== '/admin/branding' || user?.role === 'super_admin'` correctly hides the nav item for regular admins, and direct-URL navigation is gated by RequireSuperAdmin which redirects to /admin - both layers verified working in this run.",
+    "ChangePassword.jsx mobile keyboard: cp-current placeholder is the literal '123456' when forced=true. Consider neutral placeholder or hide once user starts typing - currently no concrete issue but mildly leaks the default."
+  ],
+  "updated_files": [],
+  "success_rate": { "backend": "n/a (skipped per request)", "frontend": "100%" },
+  "test_credentials": "Super Admin 1000/Admin@12345 ; Admin 1001/Admin@12345 ; Employee forced-change 1002/123456 (after reset) ; Employee 1003/123456. NOTE: 1002 has had its password changed by this test run to Test@1234Abc - to re-test the forced-change flow, log in as Super Admin (1000) -> /admin/users -> click KeyRound on 1002's row to reset back to 123456 + force change.",
+  "seed_data_creation": "None. Existing demo users used. Side-effect: employee 1002 was reset (KeyRound) and then completed forced-change flow with new password 'Test@1234Abc'. requires_password_change is now false again on 1002.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "All new auth/RBAC frontend flows verified. Key data-testids: login-employee-id-input, login-password-input, login-submit, lang-toggle-login (duplicated mobile+desktop), cp-current-input, cp-new-input, cp-confirm-input, cp-submit, cp-rules, cp-logout, change-password-page, nav-admin-branding (only renders for super_admin), admin-users, users-add-btn, user-form-employee-id, user-form-password, user-form-role (super_admin SelectItem rendered only when me.role==='super_admin'), user-form-cancel/save, user-row-<id>, user-reset-<id>, user-edit-<id>, user-toggle-<id>, user-menu-trigger, menu-logout (renders into Radix portal only AFTER user-menu-trigger is opened - use natural click() not force=True, and wait ~1s for menu to mount). Auth uses bearer JWT in localStorage keys wcp_token / wcp_user; logout removes both. Protected routes redirect to /login. /admin/branding gated by RequireSuperAdmin -> redirects to /admin for plain admins. Brute-force throttle on backend (5 attempts) keyed by IP+employee_id - keep failed attempts low in scripts. To re-test 1002's forced-change flow, reset via Users page first (1002 user_id = emp-0001 in current DB).",
+  "rca of the issue": "No bugs found - all review-request features behave as specified."
+}

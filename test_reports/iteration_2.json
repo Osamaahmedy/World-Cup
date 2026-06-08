@@ -1,0 +1,35 @@
+{
+  "summary": "Re-tested brute-force fix in /api/auth/login. The fix in /app/backend/routers/auth.py (reading X-Forwarded-For first IP, falling back to client.host) is correct. Updated TestZBruteForce::test_rate_limit_429 to send a stable X-Forwarded-For header across the 6 attempts, and added 2 new tests (lockout persistence + valid admin login sanity). Ran the FULL suite — 44/44 passed.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_backend.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "auth.py: XFF parsing is correct (first IP, stripped). Consider trusting only when behind a known proxy in production to prevent spoofed XFF bypass — currently any client can spoof XFF and rotate IPs to evade the throttle. For this MVP/preview env it's acceptable.",
+    "Brute-force throttle is in-memory only — will not persist across pod restarts and is per-instance (not cluster-wide). Acceptable for MVP; flag for production hardening (Redis-backed).",
+    "Throttle key is (ip:email). A wide attacker could distribute attempts across many emails from one IP and never hit the cap. Consider an additional per-IP global counter."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_backend.py"
+  ],
+  "success_rate": {
+    "backend": "100%",
+    "frontend": "skipped"
+  },
+  "test_credentials": "admin@company.com / Admin@12345 (from /app/memory/test_credentials.md)",
+  "seed_data_creation": "None. Throwaway emails (throwaway_<hex>@nope.com, lockout_<hex>@nope.com) used per test; no DB pollution since users don't exist.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Brute-force fix validated. TestZBruteForce now has 3 tests: (1) 5x401 then 429 with stable XFF, (2) lockout persists after 429 with correct password, (3) valid admin login still works under XFF-based throttling. Throttle is in-memory — any restart of backend wipes _attempts. If retesting, use fresh throwaway emails and fresh XFF IPs to avoid carrying over throttle state. Full 44-test suite is green.",
+  "rca of the issue": "Previous failure (iteration 1) was caused by /api/auth/login using request.client.host as the throttle key IP. In K8s, ingress source IP rotates per request, so each of the 6 login attempts had a different (ip:email) key and never hit the 5-attempt cap → no 429. Fix in routers/auth.py lines 44-45: xff = request.headers.get('x-forwarded-for', ''); ip = xff.split(',')[0].strip() if xff else (request.client.host if request.client else 'unknown'). Reproduction in test: use requests.Session with sess.headers.update({'X-Forwarded-For': '<stable_ip>'}) and the 6th attempt returns 429 as expected. Mitigation deployed and verified."
+}

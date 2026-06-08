@@ -1,0 +1,48 @@
+{
+  "summary": "Backend-only testing for World Cup Predictor. Ran 42 pytest cases across health, auth, RBAC, tournament, users (CRUD+CSV), predictions (create/update/lock/window), match settlement, leaderboard, dashboard, content, prizes auto-assign, admin reports, audit logs, settings. 41 passed. 1 failed: brute-force rate-limit returns 401 on all 6 attempts (expected 429 on 6th). Root cause identified: kubernetes ingress round-robins requests across two proxy IPs (10.208.130.77 / 10.208.130.78), splitting in-memory throttle counts so the per-IP/email key never reaches MAX_ATTEMPTS=5.",
+  "backend_issues": {
+    "critical": [
+      {
+        "endpoint": "POST /api/auth/login",
+        "issue": "Brute-force throttle ineffective in deployed environment. routers/auth.py uses request.client.host (the immediate ingress upstream IP) as part of the throttle key. K8s ingress alternates upstream proxy IPs, so attempts are spread across two different keys (10.208.130.77 and 10.208.130.78 observed in audit logs) and the 5-attempt threshold is never hit. Test made 7 wrong attempts in a row, all returned 401, none returned 429. This effectively disables the OWASP brute-force protection mentioned in the requirements.",
+        "priority": "HIGH"
+      }
+    ],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_backend.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [
+    "Fix brute-force throttle in /app/backend/routers/auth.py: use X-Forwarded-For header (first IP) to derive the real client IP, OR drop IP from the key and throttle by email only (with a global cap to avoid memory blow-up). Recommended snippet: `ip = request.headers.get('x-forwarded-for', '').split(',')[0].strip() or (request.client.host if request.client else 'unknown')`. After fix, repeat the brute-force test (already present: TestZBruteForce::test_rate_limit_429).",
+    "Consider persisting throttle counters (e.g., in Mongo or Redis) so that they survive process restarts and are shared across workers/pods if scaling beyond a single worker."
+  ],
+  "critical_code_review_comments": [
+    "auth.py brute-force key uses request.client.host without X-Forwarded-For — broken behind any reverse proxy / ingress that round-robins upstreams (current K8s behaviour). Documented above as HIGH.",
+    "predictions.py _window_open: uses doc.get('value', {}).get('open', True). Note that the seed inserts {open: True}; closing then reopening works in tests. Edge-case: if the settings doc has value=null, .get returns None and .get('open', True) would crash. Low-risk since the route validates with PredictionWindow model.",
+    "scoring.settle_match is idempotent (uses delta = pts - existing) so re-settling a finished match by re-PATCHing /result won't double-count points. Good.",
+    "users.py CSV import: no role validation — a CSV row with role='admin' would create an admin without further checks. Consider whitelisting allowed roles or requiring explicit super-admin scope. Not blocking but worth flagging.",
+    "audit.log_action uses key 'metadata' which conflicts with Pydantic v2 protected namespace warnings in some versions — not failing currently but worth alias if upgrading Pydantic.",
+    "All routers correctly exclude Mongo _id in projections. Good.",
+    "JWT_SECRET present in .env; CORS_ORIGINS='*' with allow_credentials=True — browsers will reject this combo. Acceptable for API testing but should be tightened for production."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_backend.py (new pytest suite)"
+  ],
+  "success_rate": {
+    "backend": "97.6% (41/42)",
+    "frontend": "n/a (skipped per request)"
+  },
+  "test_credentials": "Admin admin@company.com / Admin@12345 and Employee employee@company.com / Employee@12345 (both work). Other demo employees use Welcome@123. Confirmed via /app/memory/test_credentials.md.",
+  "seed_data_creation": "Did not seed extra data. Used existing seed: 16 teams, 12 matches, 10 users (1 admin, 9 employees), 3 news items, 1 announcement, 4 prizes. Created 2 TEST_ users via CSV import + 1 via POST /users (then deactivated). Settled 1 scheduled match for scoring test (modifies state — total_points on employee@company.com increased by 10).",
+  "retest_needed": true,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "All 41 functional tests are green and represent good regression coverage. The only failing case (TestZBruteForce::test_rate_limit_429) is environmental + design: K8s ingress round-robins between 10.208.130.77 / .78 and the throttle key uses request.client.host, so each pseudo-IP counts independently. After main agent applies the X-Forwarded-For fix, just rerun `pytest /app/backend/tests/test_backend.py -v`. Note: scoring test mutates state (sets one scheduled match to finished and adds 10 pts to employee@company.com); re-running won't break tests but state accumulates — wipe DB if a clean rerun is needed. Window-closed test re-opens the window at the end so subsequent runs are safe.",
+  "rca of the issue": "REPRODUCTION: from a single requests.Session, POST /api/auth/login with a throwaway email and wrong password 6 times. Expected: first 5 → 401, 6th → 429. Observed: all 6 → 401. RCA: routers/auth.py builds the throttle key as `f\"{ip}:{email.lower()}\"` where ip = request.client.host. In this kubernetes deployment the immediate upstream alternates between two proxy IPs (10.208.130.77 and 10.208.130.78 — confirmed in audit_logs.ip for the same throwaway email). Consequently a single client's attempts are spread across two map keys; neither reaches MAX_ATTEMPTS (5) within WINDOW_SECONDS (300). MITIGATION: In auth.login, derive ip from X-Forwarded-For (first comma-separated value) if present, else fall back to request.client.host. Better long-term: store throttle counters in Mongo/Redis and key by email only (with a higher threshold) to make it pod- and proxy-agnostic."
+}
